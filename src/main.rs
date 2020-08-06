@@ -2,20 +2,24 @@
 fn main() {
     println!("Starting up..");
 
-    let sdl = sdl2::init()
-                .expect("Failed to init SDL");
+    let sdl = sdl2::init().unwrap();
+               
+    let video = sdl.video().unwrap();
+            
+    let gl_attr = video.gl_attr();
     
-    let video_subsystem = sdl.video()
-                .expect("Failed to init Video subsystem");
-    
-    let window = video_subsystem
+    let window = video
         .window("Game", 900, 700)
+        .opengl()
         .resizable()
         .build()
-        .expect("Failed to create window");
+        .unwrap();
+
+    let gl_ctx = window.gl_create_context().unwrap();
     
-    let mut event_pump = sdl.event_pump()
-        .expect("Event pump failed");
+    // let ctx 
+    
+    let mut event_pump = sdl.event_pump().unwrap();        
         
     'main: loop {
         // Handle user input here
