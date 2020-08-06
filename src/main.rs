@@ -48,7 +48,7 @@ fn main() {
     }
 }
 
-use std::ffi::{CString, CStr};
+use std::ffi::{CStr, CString};
 
 fn shader_from_source(source: &CStr, kind: gl::types::GLenum) -> Result<gl::types::GLuint, String> {
     let id = unsafe { gl::CreateShader(kind) };
@@ -72,13 +72,8 @@ fn shader_from_source(source: &CStr, kind: gl::types::GLenum) -> Result<gl::type
             gl::GetShaderiv(id, gl::INFO_LOG_LENGTH, &mut len);
         }
 
-        // Allocate buffer of correct size
-        let mut buffer: Vec<u8> = Vec::with_capacity(len as usize + 1);
-        // fill it with len spaces
-        buffer.extend([b' '].iter().cycle().take(len as usize));
-        // Convert buffer to CString (re-uses allocation and appends 0 at end)
-        let error: CString = unsafe { CString::from_vec_unchecked(buffer) };
-
+        let error = create_whitespace_cstring_with_len(len as usize);
+        
         // 2. Ask OpenGL to write the shader info log into our error value
         unsafe {
             gl::GetShaderInfoLog(
@@ -94,4 +89,13 @@ fn shader_from_source(source: &CStr, kind: gl::types::GLenum) -> Result<gl::type
     }
 
     Ok(id)
+}
+
+fn create_whitespace_cstring_with_len(len: usize) -> CString {
+    // Allocate buffer of correct size
+    let mut buffer: Vec<u8> = Vec::with_capacity(len as usize + 1);
+    // fill it with len spaces
+    buffer.extend([b' '].iter().cycle().take(len as usize));
+    // Convert buffer to CString (re-uses allocation and appends 0 at end)
+    unsafe { CString::from_vec_unchecked(buffer) }
 }
