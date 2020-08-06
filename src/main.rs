@@ -48,6 +48,33 @@ fn main() {
     }
 }
 
+struct Shader {
+    id: gl::types::GLuint,
+}
+
+impl Shader {
+    fn from_source(source: &CStr, kind: gl::types::GLenum) -> Result<Shader, String> {
+        let id = shader_from_source(source, kind)?;
+        Ok(Shader { id })
+    }
+
+    fn from_vert_source(source: &CStr) -> Result<Shader, String> {
+        Shader::from_source(source, gl::VERTEX_SHADER)
+    }
+
+    fn from_frag_source(source: &CStr) -> Result<Shader, String> {
+        Shader::from_source(source, gl::FRAGMENT_SHADER)
+    }
+}
+
+impl Drop for Shader {
+    fn drop(&mut self) {
+        unsafe {
+            gl::DeleteShader(self.id);
+        }
+    }
+}
+
 use std::ffi::{CStr, CString};
 
 fn shader_from_source(source: &CStr, kind: gl::types::GLenum) -> Result<gl::types::GLuint, String> {
@@ -73,7 +100,7 @@ fn shader_from_source(source: &CStr, kind: gl::types::GLenum) -> Result<gl::type
         }
 
         let error = create_whitespace_cstring_with_len(len as usize);
-        
+
         // 2. Ask OpenGL to write the shader info log into our error value
         unsafe {
             gl::GetShaderInfoLog(
