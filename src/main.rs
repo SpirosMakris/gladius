@@ -14,7 +14,20 @@ fn main() {
         .build()
         .expect("Failed to create window");
     
-    loop {
+    let mut event_pump = sdl.event_pump()
+        .expect("Event pump failed");
+        
+    'main: loop {
+        // Handle user input here
+        for event in event_pump.poll_iter() {
+            match event {
+                sdl2::event::Event::Quit {..} => break 'main,
+                _ => {},
+            }
+        }
+
+        // Render window contents here
+
         std::thread::sleep(std::time::Duration::from_millis(17));
     }
 
