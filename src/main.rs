@@ -1,13 +1,12 @@
-
 fn main() {
     println!("Starting up..");
 
     let sdl = sdl2::init().unwrap();
-               
+
     let video = sdl.video().unwrap();
-            
+
     let gl_attr = video.gl_attr();
-    
+
     let window = video
         .window("Game", 900, 700)
         .opengl()
@@ -16,23 +15,31 @@ fn main() {
         .unwrap();
 
     let gl_ctx = window.gl_create_context().unwrap();
-    
-    // let ctx 
-    
-    let mut event_pump = sdl.event_pump().unwrap();        
-        
+
+    let gl = gl::load_with(|s| video.gl_get_proc_address(s) as *const _);
+
+    let mut event_pump = sdl.event_pump().unwrap();
+
+    unsafe {
+        gl::ClearColor(0.3, 0.3, 0.5, 1.0);
+    }
+
     'main: loop {
         // Handle user input here
         for event in event_pump.poll_iter() {
             match event {
-                sdl2::event::Event::Quit {..} => break 'main,
-                _ => {},
+                sdl2::event::Event::Quit { .. } => break 'main,
+                _ => {}
             }
         }
 
-        // Render window contents here
+        // Render
+        unsafe {
+            gl::Clear(gl::COLOR_BUFFER_BIT);
+        }
+
+        window.gl_swap_window();
 
         std::thread::sleep(std::time::Duration::from_millis(17));
     }
-
 }
