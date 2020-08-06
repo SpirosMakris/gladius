@@ -30,6 +30,20 @@ fn main() {
         gl::ClearColor(0.3, 0.3, 0.5, 1.0);
     }
 
+    use std::ffi::CString;
+
+    let vert_shader =
+        render_gl::Shader::from_vert_source(&CString::new(include_str!("triangle.vert")).unwrap())
+            .unwrap();
+
+    let frag_shader =
+        render_gl::Shader::from_frag_source(&CString::new(include_str!("triangle.frag")).unwrap())
+            .unwrap();
+
+    let shader_program = render_gl::Program::from_shaders(&[vert_shader, frag_shader]).unwrap();
+
+    shader_program.set_used();
+
     'main: loop {
         // Handle user input here
         for event in event_pump.poll_iter() {
@@ -49,4 +63,3 @@ fn main() {
         std::thread::sleep(std::time::Duration::from_millis(17));
     }
 }
-
