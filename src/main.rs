@@ -1,7 +1,13 @@
 pub mod render_gl;
+pub mod resources;
+
+use resources::Resources;
+use std::path::Path;
 
 fn main() {
     println!("Starting up..");
+
+    let res = Resources::from_relative_exe_path(Path::new("assets")).unwrap();
 
     let sdl = sdl2::init().unwrap();
     let video = sdl.video().unwrap();

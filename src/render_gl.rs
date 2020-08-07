@@ -1,6 +1,30 @@
 use gl;
+use crate::resources::{self, Resources};
 use std;
 use std::ffi::{CStr, CString};
+
+#[derive(Debug)]
+pub enum Error {
+    ResourceLoad {
+        name: String,
+        inner: resources::Error,
+    },
+
+    CanNotDetermineShaderTypeForResource {
+        name: String,
+    },
+
+    CompileError {
+        name: String,
+        message: String,
+    },
+
+    LinkError {
+        name: String,
+        message: String,
+    }
+}
+
 
 pub struct Program {
     gl: gl::Gl,
@@ -8,6 +32,21 @@ pub struct Program {
 }
 
 impl Program {
+    pub fn from_res(gl: &gl::Gl, res: &Resources, name: &str) -> Result<Program, Error> {
+        const POSSIBLE_EXT: [&str; 2] = [".vert", ".frag"];
+
+        let resource_names = POSSIBLE_EXT
+            .iter()
+            .map(|file_extension| format!("{}{}", name, file_extension))
+            .collect::<Vec<String>>();
+        
+        let shaders = resource_names
+            .iter()
+            .map(|resource_name| Shader::from_res(gl, res, resource_name))
+            .collect() XXXXXX
+
+    }
+
     pub fn from_shaders(gl: &gl::Gl, shaders: &[Shader]) -> Result<Program, String> {
         let program_id = unsafe { gl.CreateProgram() };
 
