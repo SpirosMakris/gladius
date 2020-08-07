@@ -27,6 +27,7 @@ impl Program {
         }
 
         if success == 0 {
+            dbg!("Failed to link program");
             let mut len: gl::types::GLint = 0;
             unsafe {
                 gl::GetProgramiv(program_id, gl::INFO_LOG_LENGTH, &mut len);
@@ -119,6 +120,7 @@ fn shader_from_source(source: &CStr, kind: gl::types::GLenum) -> Result<gl::type
     }
 
     if success == 0 {
+        dbg!("Failed to compile shader");
         // Failure to compile, let's get the error message
 
         // 1. Get length of error message and create appropriate buffer & CString
@@ -150,7 +152,7 @@ fn create_whitespace_cstring_with_len(len: usize) -> CString {
     // Allocate buffer of correct size
     let mut buffer: Vec<u8> = Vec::with_capacity(len + 1);
     // fill it with len spaces
-    buffer.extend([b' '].iter().cycle().take(len));
+    buffer.extend([b'_'].iter().cycle().take(len));
     // Convert buffer to CString (re-uses allocation and appends 0 at end)
     unsafe { CString::from_vec_unchecked(buffer) }
 }

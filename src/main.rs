@@ -4,7 +4,6 @@ fn main() {
     println!("Starting up..");
 
     let sdl = sdl2::init().unwrap();
-
     let video = sdl.video().unwrap();
 
     let gl_attr = video.gl_attr();
@@ -19,19 +18,14 @@ fn main() {
         .build()
         .unwrap();
 
-    let gl_ctx = window.gl_create_context().unwrap();
+    let _gl_context = window.gl_create_context().unwrap();
 
     gl::load_with(|s| video.gl_get_proc_address(s) as *const _);
 
-    let mut event_pump = sdl.event_pump().unwrap();
-
-    unsafe {
-        gl::Viewport(0, 0, 900, 700);
-        gl::ClearColor(0.3, 0.3, 0.5, 1.0);
-    }
-
+    // Setup shader program
     use std::ffi::CString;
-
+    println!("{}", include_str!("triangle.vert"));
+    println!("{}", include_str!("triangle.frag"));
     let vert_shader =
         render_gl::Shader::from_vert_source(&CString::new(include_str!("triangle.vert")).unwrap())
             .unwrap();
@@ -42,7 +36,69 @@ fn main() {
 
     let shader_program = render_gl::Program::from_shaders(&[vert_shader, frag_shader]).unwrap();
 
-    shader_program.set_used();
+    // Set up VBO (Vertex Buffer Object)
+    let vertices: Vec<f32> = vec![
+        -0.5, -0.5, 0.0,
+         0.5, -0.5, 0.0,
+         0.0,  0.5, 0.0
+    ];
+
+    // Create VBO
+    let mut vbo: gl::types::GLuint = 0;
+    unsafe {
+        gl::GenBuffers(1, &mut vbo);
+    }
+
+    // Upload our data to the VBO
+    unsafe {
+        gl::BindBuffer(gl::ARRAY_BUFFER, vbo);
+        gl::BufferData(
+            gl::ARRAY_BUFFER,   // target
+            (vertices.len() * std::mem::size_of::<f32>()) as gl::types::GLsizeiptr, // size of data in bytes
+            vertices.as_ptr() as *const gl::types::GLvoid,  // pointer to data
+            gl::STATIC_DRAW,    // usage
+        );
+        gl::BindBuffer(gl::ARRAY_BUFFER, 0);    // unbind the buffer
+    }
+
+    // Setup VAO (Vertex Array Object)
+    let mut vao: gl::types::GLuint = 0;
+    unsafe {
+        gl::GenVertexArrays(1, &mut vao);
+    }
+
+    // Define the VAO
+    unsafe {
+        gl::BindVertexArray(vao);
+        gl::BindBuffer(gl::ARRAY_BUFFER, vbo);
+
+        // Specify layout
+        gl::EnableVertexAttribArray(0); // This is "layout (location = 0)" in vertex shader
+        gl::VertexAttribPointer(
+            0,  // Index the generic vertex attribute ("layout (location = 0)")
+            3,  // The number of components per generic vertex attribute
+            gl::FLOAT,  // Data type
+            gl::FALSE,  // Normalized (int-to-float conversion ?)
+            (3 * std::mem::size_of::<f32>()) as gl::types::GLint,   // Stride (byte offset between consecutive attributes)
+            std::ptr::null()    // offset of the first component
+        );
+
+        // And unbind VBO & VAO
+        gl::BindBuffer(gl::ARRAY_BUFFER, 0);
+        gl::BindVertexArray(0);
+
+    }
+
+    // Setup shared state for window
+
+    unsafe {
+        gl::Viewport(0, 0, 900, 700);
+        gl::ClearColor(0.3, 0.3, 0.5, 1.0);
+    }
+
+
+    // Main loop
+    let mut event_pump = sdl.event_pump().unwrap();
 
     'main: loop {
         // Handle user input here
@@ -58,6 +114,18 @@ fn main() {
             gl::Clear(gl::COLOR_BUFFER_BIT);
         }
 
+        // Draw triangle
+        shader_program.set_used();
+        unsafe {
+            gl::BindVertexArray(vao);
+            gl::DrawArrays(
+                gl::TRIANGLES,  // mode
+                0,              // Starting index in the enabled array
+                3,              // NUmber of indices to be rendered
+            )
+        }
+
+        // Present rendered buffer
         window.gl_swap_window();
 
         std::thread::sleep(std::time::Duration::from_millis(17));
