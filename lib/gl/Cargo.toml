@@ -1,15 +1,14 @@
 [package]
-name = "gladius"
+name = "gl"
 version = "0.1.0"
 authors = ["Spiros Makris <makris.spiros@gmail.com>"]
 edition = "2018"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
-[dependencies]
-sdl2 = "0.34.2"
-# gl = "0.14.0"
-gl = { path = "lib/gl" }
+[build-dependencies]
+gl_generator = "0.14"
+#gl_generator_profiling_struct = "0.1"
 
 [features]
-gl_debug = ["gl/debug"]
+debug = []
