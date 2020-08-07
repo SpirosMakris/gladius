@@ -9,7 +9,7 @@ fn main() {
     let gl_attr = video.gl_attr();
 
     gl_attr.set_context_profile(sdl2::video::GLProfile::Core);
-    gl_attr.set_context_version(4, 5);
+    gl_attr.set_context_version(4, 1);
 
     let window = video
         .window("Game", 900, 700)
@@ -38,9 +38,10 @@ fn main() {
 
     // Set up VBO (Vertex Buffer Object)
     let vertices: Vec<f32> = vec![
-        -0.5, -0.5, 0.0,
-         0.5, -0.5, 0.0,
-         0.0,  0.5, 0.0
+        // positions
+         0.5, -0.5, 0.0,    1.0, 0.0, 0.0,  // Bottom right
+        -0.5, -0.5, 0.0,    0.0, 1.0, 0.0,  // Bottom left
+         0.0,  0.5, 0.0,    0.0, 0.0, 1.0,  // Top
     ];
 
     // Create VBO
@@ -73,14 +74,27 @@ fn main() {
         gl::BindBuffer(gl::ARRAY_BUFFER, vbo);
 
         // Specify layout
+
+        // Position (0)
         gl::EnableVertexAttribArray(0); // This is "layout (location = 0)" in vertex shader
         gl::VertexAttribPointer(
             0,  // Index the generic vertex attribute ("layout (location = 0)")
             3,  // The number of components per generic vertex attribute
             gl::FLOAT,  // Data type
             gl::FALSE,  // Normalized (int-to-float conversion ?)
-            (3 * std::mem::size_of::<f32>()) as gl::types::GLint,   // Stride (byte offset between consecutive attributes)
+            (6 * std::mem::size_of::<f32>()) as gl::types::GLint,   // Stride (byte offset between consecutive attributes)
             std::ptr::null()    // offset of the first component
+        );
+
+        // Vertex Color (1)
+        gl::EnableVertexAttribArray(1); // This is "layout (location = 1)" in vertex shader
+        gl::VertexAttribPointer(
+            1,  // Index for Vertex color
+            3,  // num components for color attribute
+            gl::FLOAT,  // Type of each component for color
+            gl::FALSE,  // No normalization
+            (6 * std::mem::size_of::<f32>()) as gl::types::GLint,   // Stride
+            (3 * std::mem::size_of::<f32>()) as *const gl::types::GLvoid,   // offset of this component
         );
 
         // And unbind VBO & VAO
