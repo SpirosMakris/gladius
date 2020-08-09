@@ -12,11 +12,8 @@ fn main() {
     let exe_path = locate_target_dir_from_output_dir(&out_dir)
         .expect("Failed to find target dir")
         .join(env::var("PROFILE").unwrap());
-    
-    copy_assets(
-        &manifest_dir.join("assets"),
-        &exe_path.join("assets")
-    );
+
+    copy_assets(&manifest_dir.join("assets"), &exe_path.join("assets"));
 }
 
 fn locate_target_dir_from_output_dir(mut target_dir_search: &Path) -> Option<&Path> {
@@ -55,8 +52,7 @@ fn copy_assets(from: &Path, to: &Path) {
                     .create(target_path)
                     .expect("Failed to create target dir");
             } else {
-                fs::copy(entry.path(), &target_path)
-                    .expect("Failed to copy");
+                fs::copy(entry.path(), &target_path).expect("Failed to copy");
             }
         }
     }

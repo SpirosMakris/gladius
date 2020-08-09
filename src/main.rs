@@ -4,7 +4,39 @@ pub mod resources;
 use resources::Resources;
 use std::path::Path;
 
-use anyhow::{Error,Result};
+use anyhow::{Error, Result};
+
+use render_gl::data;
+
+#[derive(Copy, Clone, Debug)]
+#[repr(C, packed)]
+struct Vertex {
+    pos: data::f32_f32_f32,
+    clr: data::f32_f32_f32,
+}
+
+impl Vertex {
+    fn vertex_attrib_pointers(gl: &gl::Gl) {
+        let stride = std::mem::size_of::<Self>(); // Stride (byte offset between consecutive attributes)
+        let location = 0; // layout (location = 0)
+        let offset = 0; // Offset of the first component
+
+        // Specify layout
+        // Position (0)
+        unsafe {
+            data::f32_f32_f32::vertex_attrib_pointer(gl, location, stride, offset);
+        }
+
+        // Vertex Color (1)
+
+        let location = 1; // layout (location = 1)
+        let offset = offset + std::mem::size_of::<data::f32_f32_f32>();
+
+        unsafe {
+            data::f32_f32_f32::vertex_attrib_pointer(gl, location, stride, offset);
+        }
+    }
+}
 
 fn main() {
     if let Err(e) = run() {
@@ -18,10 +50,8 @@ fn run() -> Result<()> {
 
     let res = Resources::from_relative_exe_path(Path::new("assets")).unwrap();
 
-    let sdl = sdl2::init()
-        .map_err(|message| Error::msg(message))?;
-    let video = sdl.video()
-        .map_err(|message| Error::msg(message))?;
+    let sdl = sdl2::init().map_err(|message| Error::msg(message))?;
+    let video = sdl.video().map_err(|message| Error::msg(message))?;
 
     let gl_attr = video.gl_attr();
 
@@ -33,9 +63,9 @@ fn run() -> Result<()> {
         .opengl()
         .resizable()
         .build()?;
-        
 
-    let _gl_context = window.gl_create_context()
+    let _gl_context = window
+        .gl_create_context()
         .map_err(|message| Error::msg(message))?;
 
     let gl = gl::Gl::load_with(|s| video.gl_get_proc_address(s) as *const _);
@@ -45,12 +75,20 @@ fn run() -> Result<()> {
     let shader_program = render_gl::Program::from_res(&gl, &res, "shaders/triangle")?;
 
     // Set up VBO (Vertex Buffer Object)
+    // #[rustfmt::skip]
+    // let vertices: Vec<f32> = vec![
+    //     // positions
+    //      0.5, -0.5, 0.0,    1.0, 0.0, 0.0,  // Bottom right
+    //     -0.5, -0.5, 0.0,    0.0, 1.0, 0.0,  // Bottom left
+    //      0.0,  0.5, 0.0,    0.0, 0.0, 1.0,  // Top
+    // ];
+
     #[rustfmt::skip]
-    let vertices: Vec<f32> = vec![
-        // positions
-         0.5, -0.5, 0.0,    1.0, 0.0, 0.0,  // Bottom right
-        -0.5, -0.5, 0.0,    0.0, 1.0, 0.0,  // Bottom left
-         0.0,  0.5, 0.0,    0.0, 0.0, 1.0,  // Top
+    let vertices: Vec<Vertex> = vec![
+        //  positions               // colors
+        Vertex{ pos: (0.5, -0.5, 0.0).into(), clr: (1.0, 0.0, 0.0).into() },  // Bottom right
+        Vertex{ pos: (-0.5, -0.5, 0.0).into(), clr: (0.0, 1.0, 0.0).into() },  // Bottom left
+        Vertex{ pos: (0.0,  0.5, 0.0).into(), clr: (0.0, 0.0, 1.0).into() },  // Top
     ];
 
     // Create VBO
@@ -63,8 +101,8 @@ fn run() -> Result<()> {
     unsafe {
         gl.BindBuffer(gl::ARRAY_BUFFER, vbo);
         gl.BufferData(
-            gl::ARRAY_BUFFER,                                                       // target
-            (vertices.len() * std::mem::size_of::<f32>()) as gl::types::GLsizeiptr, // size of data in bytes
+            gl::ARRAY_BUFFER,                                                          // target
+            (vertices.len() * std::mem::size_of::<Vertex>()) as gl::types::GLsizeiptr, // size of data in bytes
             vertices.as_ptr() as *const gl::types::GLvoid, // pointer to data
             gl::STATIC_DRAW,                               // usage
         );
@@ -82,29 +120,7 @@ fn run() -> Result<()> {
         gl.BindVertexArray(vao);
         gl.BindBuffer(gl::ARRAY_BUFFER, vbo);
 
-        // Specify layout
-
-        // Position (0)
-        gl.EnableVertexAttribArray(0); // This is "layout (location = 0)" in vertex shader
-        gl.VertexAttribPointer(
-            0,         // Index the generic vertex attribute ("layout (location = 0)")
-            3,         // The number of components per generic vertex attribute
-            gl::FLOAT, // Data type
-            gl::FALSE, // Normalized (int-to-float conversion ?)
-            (6 * std::mem::size_of::<f32>()) as gl::types::GLint, // Stride (byte offset between consecutive attributes)
-            std::ptr::null(),                                     // offset of the first component
-        );
-
-        // Vertex Color (1)
-        gl.EnableVertexAttribArray(1); // This is "layout (location = 1)" in vertex shader
-        gl.VertexAttribPointer(
-            1,                                                            // Index for Vertex color
-            3,         // num components for color attribute
-            gl::FLOAT, // Type of each component for color
-            gl::FALSE, // No normalization
-            (6 * std::mem::size_of::<f32>()) as gl::types::GLint, // Stride
-            (3 * std::mem::size_of::<f32>()) as *const gl::types::GLvoid, // offset of this component
-        );
+        Vertex::vertex_attrib_pointers(&gl);
 
         // And unbind VBO & VAO
         gl.BindBuffer(gl::ARRAY_BUFFER, 0);
@@ -118,8 +134,7 @@ fn run() -> Result<()> {
     }
 
     // Main loop
-    let mut event_pump = sdl.event_pump()
-        .map_err(|message| Error::msg(message))?;
+    let mut event_pump = sdl.event_pump().map_err(|message| Error::msg(message))?;
 
     'main: loop {
         // Handle user input here

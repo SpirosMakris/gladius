@@ -27,17 +27,15 @@ pub struct Resources {
 impl Resources {
     pub fn from_relative_exe_path(rel_path: &Path) -> Result<Resources, Error> {
         // Get the complete path to the program's executable
-        let exe_file_name = ::std::env::current_exe()
-            .map_err(|_| Error::FailedToGetExePath)?;
+        let exe_file_name = ::std::env::current_exe().map_err(|_| Error::FailedToGetExePath)?;
 
         // We need just the path to the exe, without the exe name at the end
-        let exe_path = exe_file_name.parent()
-            .ok_or(Error::FailedToGetExePath)?;
-        
+        let exe_path = exe_file_name.parent().ok_or(Error::FailedToGetExePath)?;
+
         dbg!("Resources: exe_path: {}", exe_path);
-            
+
         Ok(Resources {
-            root_path: exe_path.join(rel_path)
+            root_path: exe_path.join(rel_path),
         })
     }
 
@@ -46,9 +44,7 @@ impl Resources {
     }
 
     pub fn load_cstring(&self, resource_name: &str) -> Result<ffi::CString, Error> {
-        let mut file = fs::File::open(
-            resource_name_to_path(&self.root_path, resource_name)
-        )?;
+        let mut file = fs::File::open(resource_name_to_path(&self.root_path, resource_name))?;
 
         // allocate buffer of the same size as the file
         let mut buffer: Vec<u8> = Vec::with_capacity(file.metadata()?.len() as usize + 1);
