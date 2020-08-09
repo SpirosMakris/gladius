@@ -2,23 +2,29 @@ use gl;
 use crate::resources::{self, Resources};
 use std;
 use std::ffi::{CStr, CString};
+use thiserror::Error;
 
-#[derive(Debug)]
+#[derive(Error, Debug)]
 pub enum Error {
+    #[error("Failed to load resource {}", name)]
     ResourceLoad {
         name: String,
+        #[source]
         inner: resources::Error,
     },
 
+    #[error("Can not determine shader type for resource {}", name)]
     CanNotDetermineShaderTypeForResource {
         name: String,
     },
 
+    #[error("Failed to compile shader {}: {}", name, message)]
     CompileError {
         name: String,
         message: String,
     },
 
+    #[error("Failed to link program {}: {}", name, message)]
     LinkError {
         name: String,
         message: String,

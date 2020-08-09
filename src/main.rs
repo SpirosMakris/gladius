@@ -4,13 +4,24 @@ pub mod resources;
 use resources::Resources;
 use std::path::Path;
 
+use anyhow::{Error,Result};
+
 fn main() {
+    if let Err(e) = run() {
+        // println!("@ERROR: {}", anyhow_to_string(e));
+        println!("@ERROR: {}", e);
+    }
+}
+
+fn run() -> Result<()> {
     println!("Starting up..");
 
     let res = Resources::from_relative_exe_path(Path::new("assets")).unwrap();
 
-    let sdl = sdl2::init().unwrap();
-    let video = sdl.video().unwrap();
+    let sdl = sdl2::init()
+        .map_err(|message| Error::msg(message))?;
+    let video = sdl.video()
+        .map_err(|message| Error::msg(message))?;
 
     let gl_attr = video.gl_attr();
 
@@ -21,32 +32,17 @@ fn main() {
         .window("Game", 900, 700)
         .opengl()
         .resizable()
-        .build()
-        .unwrap();
+        .build()?;
+        
 
-    let _gl_context = window.gl_create_context().unwrap();
+    let _gl_context = window.gl_create_context()
+        .map_err(|message| Error::msg(message))?;
 
     let gl = gl::Gl::load_with(|s| video.gl_get_proc_address(s) as *const _);
 
     println!("Size of Gl context struct: {}", std::mem::size_of_val(&gl));
 
-    // Setup shader program
-    // use std::ffi::CString;
-    // let vert_shader = render_gl::Shader::from_vert_source(
-    //     &gl,
-    //     &CString::new(include_str!("triangle.vert")).unwrap(),
-    // )
-    // .unwrap();
-
-    // let frag_shader = render_gl::Shader::from_frag_source(
-    //     &gl,
-    //     &CString::new(include_str!("triangle.frag")).unwrap(),
-    // )
-    // .unwrap();
-
-    // let shader_program = render_gl::Program::from_shaders(&gl, &[vert_shader, frag_shader]).unwrap();
-    let shader_program = render_gl::Program::from_res(&gl, &res, "shaders/triangle")
-        .unwrap();
+    let shader_program = render_gl::Program::from_res(&gl, &res, "shaders/triangle")?;
 
     // Set up VBO (Vertex Buffer Object)
     #[rustfmt::skip]
@@ -116,14 +112,14 @@ fn main() {
     }
 
     // Setup shared state for window
-
     unsafe {
         gl.Viewport(0, 0, 900, 700);
         gl.ClearColor(0.3, 0.3, 0.5, 1.0);
     }
 
     // Main loop
-    let mut event_pump = sdl.event_pump().unwrap();
+    let mut event_pump = sdl.event_pump()
+        .map_err(|message| Error::msg(message))?;
 
     'main: loop {
         // Handle user input here
@@ -155,4 +151,6 @@ fn main() {
 
         std::thread::sleep(std::time::Duration::from_millis(17));
     }
+
+    Ok(())
 }
