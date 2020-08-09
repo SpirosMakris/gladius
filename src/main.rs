@@ -31,20 +31,22 @@ fn main() {
     println!("Size of Gl context struct: {}", std::mem::size_of_val(&gl));
 
     // Setup shader program
-    use std::ffi::CString;
-    let vert_shader = render_gl::Shader::from_vert_source(
-        &gl,
-        &CString::new(include_str!("triangle.vert")).unwrap(),
-    )
-    .unwrap();
+    // use std::ffi::CString;
+    // let vert_shader = render_gl::Shader::from_vert_source(
+    //     &gl,
+    //     &CString::new(include_str!("triangle.vert")).unwrap(),
+    // )
+    // .unwrap();
 
-    let frag_shader = render_gl::Shader::from_frag_source(
-        &gl,
-        &CString::new(include_str!("triangle.frag")).unwrap(),
-    )
-    .unwrap();
+    // let frag_shader = render_gl::Shader::from_frag_source(
+    //     &gl,
+    //     &CString::new(include_str!("triangle.frag")).unwrap(),
+    // )
+    // .unwrap();
 
-    let shader_program = render_gl::Program::from_shaders(&gl, &[vert_shader, frag_shader]).unwrap();
+    // let shader_program = render_gl::Program::from_shaders(&gl, &[vert_shader, frag_shader]).unwrap();
+    let shader_program = render_gl::Program::from_res(&gl, &res, "shaders/triangle")
+        .unwrap();
 
     // Set up VBO (Vertex Buffer Object)
     #[rustfmt::skip]

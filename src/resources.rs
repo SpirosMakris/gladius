@@ -30,6 +30,8 @@ impl Resources {
         let exe_path = exe_file_name.parent()
             .ok_or(Error::FailedToGetExePath)?;
         
+        dbg!("Resources: exe_path: {}", exe_path);
+            
         Ok(Resources {
             root_path: exe_path.join(rel_path)
         })

@@ -43,7 +43,16 @@ impl Program {
         let shaders = resource_names
             .iter()
             .map(|resource_name| Shader::from_res(gl, res, resource_name))
-            .collect() XXXXXX
+            .collect::<Result<Vec<Shader>, Error>>()?; // Report just the 1st error encountered (tricky tricky)
+            // @NOTE: on `collect()`: When we have a bunch of `Result<T, E>` items we can collect them
+            // into a `Result<Vec<T>, E> which will contain a first encountered error OR a list of unwrapped values
+
+        
+        Program::from_shaders(gl, &shaders[..])
+            .map_err(|message| Error::LinkError {
+                name: name.into(),
+                message,
+            })
 
     }
 
@@ -124,6 +133,29 @@ pub struct Shader {
 }
 
 impl Shader {
+    pub fn from_res(gl: &gl::Gl, res: &Resources, name: &str) -> Result<Shader, Error> {
+        const POSSIBLE_EXT: [(&str, gl::types::GLenum); 2] =
+            [(".vert", gl::VERTEX_SHADER), (".frag", gl::FRAGMENT_SHADER)];
+        
+        let shader_kind = POSSIBLE_EXT
+            .iter()
+            .find(|&&(file_extension, _)| name.ends_with(file_extension))
+            .map(|&(_, kind)| kind)
+            .ok_or_else(|| Error::CanNotDetermineShaderTypeForResource { name: name.into() })?;
+
+        let source = res.load_cstring(name)
+            .map_err(|e| Error::ResourceLoad {
+                name: name.into(),
+                inner: e
+            })?;
+        
+        Shader::from_source(gl, &source, shader_kind)
+            .map_err(|message| Error::CompileError {
+                name: name.into(),
+                message,
+            })
+    }
+
     pub fn from_source(
         gl: &gl::Gl,
         source: &CStr,
