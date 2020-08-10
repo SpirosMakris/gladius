@@ -12,6 +12,8 @@ anyhow = "1"
 sdl2 = "0.34.2"
 gl = { path = "lib/gl" }
 
+render_gl_derive = { path ="render_gl_derive" }
+
 [build-dependencies]
 walkdir = "2.3"
 

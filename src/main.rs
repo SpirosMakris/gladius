@@ -8,6 +8,10 @@ use anyhow::{Error, Result};
 
 use render_gl::data;
 
+#[macro_use]
+extern crate render_gl_derive;
+
+#[derive(VertexAttribPointers)]
 #[derive(Copy, Clone, Debug)]
 #[repr(C, packed)]
 struct Vertex {
@@ -15,28 +19,28 @@ struct Vertex {
     clr: data::f32_f32_f32,
 }
 
-impl Vertex {
-    fn vertex_attrib_pointers(gl: &gl::Gl) {
-        let stride = std::mem::size_of::<Self>(); // Stride (byte offset between consecutive attributes)
-        let location = 0; // layout (location = 0)
-        let offset = 0; // Offset of the first component
+// impl Vertex {
+//     fn vertex_attrib_pointers(gl: &gl::Gl) {
+//         let stride = std::mem::size_of::<Self>(); // Stride (byte offset between consecutive attributes)
+//         let location = 0; // layout (location = 0)
+//         let offset = 0; // Offset of the first component
 
-        // Specify layout
-        // Position (0)
-        unsafe {
-            data::f32_f32_f32::vertex_attrib_pointer(gl, location, stride, offset);
-        }
+//         // Specify layout
+//         // Position (0)
+//         unsafe {
+//             data::f32_f32_f32::vertex_attrib_pointer(gl, location, stride, offset);
+//         }
 
-        // Vertex Color (1)
+//         // Vertex Color (1)
 
-        let location = 1; // layout (location = 1)
-        let offset = offset + std::mem::size_of::<data::f32_f32_f32>();
+//         let location = 1; // layout (location = 1)
+//         let offset = offset + std::mem::size_of::<data::f32_f32_f32>();
 
-        unsafe {
-            data::f32_f32_f32::vertex_attrib_pointer(gl, location, stride, offset);
-        }
-    }
-}
+//         unsafe {
+//             data::f32_f32_f32::vertex_attrib_pointer(gl, location, stride, offset);
+//         }
+//     }
+// }
 
 fn main() {
     if let Err(e) = run() {

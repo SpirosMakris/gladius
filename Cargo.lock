@@ -42,6 +42,7 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "gl",
+ "render_gl_derive",
  "sdl2",
  "thiserror",
  "walkdir",
@@ -90,6 +91,14 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "aa563d17ecb180e500da1cfd2b028310ac758de548efdd203e18f283af693f37"
 dependencies = [
  "proc-macro2",
+]
+
+[[package]]
+name = "render_gl_derive"
+version = "0.1.0"
+dependencies = [
+ "quote",
+ "syn",
 ]
 
 [[package]]
