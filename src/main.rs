@@ -6,7 +6,7 @@ use std::path::Path;
 
 use anyhow::{Error, Result};
 
-use render_gl::data;
+use render_gl::{buffer, data};
 
 #[macro_use]
 extern crate render_gl_derive;
@@ -79,14 +79,7 @@ fn run() -> Result<()> {
     let shader_program = render_gl::Program::from_res(&gl, &res, "shaders/triangle")?;
 
     // Set up VBO (Vertex Buffer Object)
-    // #[rustfmt::skip]
-    // let vertices: Vec<f32> = vec![
-    //     // positions
-    //      0.5, -0.5, 0.0,    1.0, 0.0, 0.0,  // Bottom right
-    //     -0.5, -0.5, 0.0,    0.0, 1.0, 0.0,  // Bottom left
-    //      0.0,  0.5, 0.0,    0.0, 0.0, 1.0,  // Top
-    // ];
-
+   
     #[rustfmt::skip]
     let vertices: Vec<Vertex> = vec![
         //  positions               // colors
@@ -96,40 +89,56 @@ fn run() -> Result<()> {
     ];
 
     // Create VBO
-    let mut vbo: gl::types::GLuint = 0;
-    unsafe {
-        gl.GenBuffers(1, &mut vbo);
-    }
 
-    // Upload our data to the VBO
-    unsafe {
-        gl.BindBuffer(gl::ARRAY_BUFFER, vbo);
-        gl.BufferData(
-            gl::ARRAY_BUFFER,                                                          // target
-            (vertices.len() * std::mem::size_of::<Vertex>()) as gl::types::GLsizeiptr, // size of data in bytes
-            vertices.as_ptr() as *const gl::types::GLvoid, // pointer to data
-            gl::STATIC_DRAW,                               // usage
-        );
-        gl.BindBuffer(gl::ARRAY_BUFFER, 0); // unbind the buffer
-    }
+    // let mut vbo: gl::types::GLuint = 0;
+    // unsafe {
+    //     gl.GenBuffers(1, &mut vbo);
+    // }
+
+    // // Upload our data to the VBO
+    // unsafe {
+    //     gl.BindBuffer(gl::ARRAY_BUFFER, vbo);
+    //     gl.BufferData(
+    //         gl::ARRAY_BUFFER,                                                          // target
+    //         (vertices.len() * std::mem::size_of::<Vertex>()) as gl::types::GLsizeiptr, // size of data in bytes
+    //         vertices.as_ptr() as *const gl::types::GLvoid, // pointer to data
+    //         gl::STATIC_DRAW,                               // usage
+    //     );
+    //     gl.BindBuffer(gl::ARRAY_BUFFER, 0); // unbind the buffer
+    // }
+
+    let vbo = buffer::ArrayBuffer::new(&gl);
+    vbo.bind();
+    vbo.static_draw_data(&vertices);
+    vbo.unbind();
 
     // Setup VAO (Vertex Array Object)
-    let mut vao: gl::types::GLuint = 0;
-    unsafe {
-        gl.GenVertexArrays(1, &mut vao);
-    }
 
-    // Define the VAO
-    unsafe {
-        gl.BindVertexArray(vao);
-        gl.BindBuffer(gl::ARRAY_BUFFER, vbo);
+    // let mut vao: gl::types::GLuint = 0;
+    // unsafe {
+    //     gl.GenVertexArrays(1, &mut vao);
+    // }
 
-        Vertex::vertex_attrib_pointers(&gl);
+    // // Define the VAO
+    // unsafe {
+    //     gl.BindVertexArray(vao);
+    //     // gl.BindBuffer(gl::ARRAY_BUFFER, vbo);
+    //     vbo.bind();
 
-        // And unbind VBO & VAO
-        gl.BindBuffer(gl::ARRAY_BUFFER, 0);
-        gl.BindVertexArray(0);
-    }
+    //     Vertex::vertex_attrib_pointers(&gl);
+
+    //     // And unbind VBO & VAO
+    //     // gl.BindBuffer(gl::ARRAY_BUFFER, 0);
+    //     vbo.unbind();
+    //     gl.BindVertexArray(0);
+    // }
+
+    let vao = buffer::VertexArray::new(&gl);
+    vao.bind();
+    vbo.bind();
+    Vertex::vertex_attrib_pointers(&gl);
+    vbo.unbind();
+    vao.unbind();
 
     // Setup shared state for window
     unsafe {
@@ -157,7 +166,8 @@ fn run() -> Result<()> {
         // Draw triangle
         shader_program.set_used();
         unsafe {
-            gl.BindVertexArray(vao);
+            // gl.BindVertexArray(vao);
+            vao.bind();
             gl.DrawArrays(
                 gl::TRIANGLES, // mode
                 0,             // Starting index in the enabled array
