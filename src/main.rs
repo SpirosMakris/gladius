@@ -1,5 +1,6 @@
 pub mod render_gl;
 pub mod resources;
+mod triangle;
 
 use resources::Resources;
 use std::path::Path;
