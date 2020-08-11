@@ -9,23 +9,24 @@ pub struct BufferTypeArray;
 impl BufferType for BufferTypeArray {
     const BUFFER_TYPE: gl::types::GLuint = gl::ARRAY_BUFFER;
 }
+pub type ArrayBuffer = Buffer<BufferTypeArray>;
 
 pub struct BufferTypeElementArray;
 impl BufferType for BufferTypeElementArray {
     const BUFFER_TYPE: gl::types::GLuint = gl::ELEMENT_ARRAY_BUFFER;
 }
-
-pub type ArrayBuffer = Buffer<BufferTypeArray>;
 pub type ElementArrayBuffer = Buffer<BufferTypeElementArray>;
 
-
-pub struct Buffer<B> where B: BufferType {
+pub struct Buffer<B>
+where
+    B: BufferType,
+{
     gl: gl::Gl,
     vbo: gl::types::GLuint,
     _marker: ::std::marker::PhantomData<B>,
 }
 
-// @TODO: See if storing multiple buffers in 
+// @TODO: See if storing multiple buffers in
 // single struct is more efficient for my use case
 pub struct ArrayBuffers {
     gl: gl::Gl,
@@ -33,7 +34,10 @@ pub struct ArrayBuffers {
 }
 // ~@TODO
 
-impl<B> Buffer<B> where B: BufferType {
+impl<B> Buffer<B>
+where
+    B: BufferType,
+{
     pub fn new(gl: &gl::Gl) -> Buffer<B> {
         let mut vbo: gl::types::GLuint = 0;
         unsafe {
@@ -62,16 +66,19 @@ impl<B> Buffer<B> where B: BufferType {
     pub fn static_draw_data<T>(&self, data: &[T]) {
         unsafe {
             self.gl.BufferData(
-                gl::ARRAY_BUFFER,   // target
+                gl::ARRAY_BUFFER,                                                   // target
                 (data.len() * ::std::mem::size_of::<T>()) as gl::types::GLsizeiptr, // size of data in bytes
                 data.as_ptr() as *const gl::types::GLvoid, // pointer to data
-                gl::STATIC_DRAW,    // usage
+                gl::STATIC_DRAW,                           // usage
             )
         }
     }
 }
 
-impl<B> Drop for Buffer<B> where B: BufferType {
+impl<B> Drop for Buffer<B>
+where
+    B: BufferType,
+{
     fn drop(&mut self) {
         unsafe {
             self.gl.DeleteBuffers(1, &mut self.vbo);
@@ -93,7 +100,7 @@ impl VertexArray {
 
         VertexArray {
             gl: gl.clone(),
-            vao
+            vao,
         }
     }
 
